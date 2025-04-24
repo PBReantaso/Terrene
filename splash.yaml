@@ -1,0 +1,27 @@
+# Authored by: Francis Dave A. Asico
+# Company: CSPCA
+# Project: Terrene
+# Feature: [TCM-001] Splash Screen
+# Description: Native Splash Screen when opening the app
+
+
+flutter_native_splash:
+  android: true
+  ios: true
+  web: false
+
+  color: "#1B4D3E"
+  image: "lib/assets/logo-splash.png"
+  #branding: 
+
+  color_dark: "#000000"
+  image_dark: "lib/assets/logo-splash.png"
+  #branding_dark: 
+
+  android_12:
+    color: "#1B4D3E"
+    image: "lib/assets/logo-splash.png"
+    #branding: 
+    color_dark: "#000000"
+    image_dark: "lib/assets/logo-splash.png"
+    #branding_dark: 
