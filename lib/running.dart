@@ -31,6 +31,7 @@ class _RunningScreenState extends State<RunningScreen> {
   @override
   void initState() {
     super.initState();
+    print('Initializing RunningScreen');
     _getUserLocation();
     _loadUserWeight();
   }
@@ -105,17 +106,59 @@ class _RunningScreenState extends State<RunningScreen> {
 
   Future<void> _getUserLocation() async {
     try {
-      LocationPermission permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      print('Location services enabled: $serviceEnabled');
+      
+      if (!serviceEnabled) {
+        print('Location services are disabled');
         setState(() => _locationError = true);
         return;
       }
-      Position pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+      // Check location permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      print('Initial permission status: $permission');
+      
+      if (permission == LocationPermission.denied) {
+        print('Requesting location permission');
+        permission = await Geolocator.requestPermission();
+        print('Permission after request: $permission');
+        
+        if (permission == LocationPermission.denied) {
+          print('Location permission denied');
+          setState(() => _locationError = true);
+          return;
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        print('Location permission permanently denied');
+        setState(() => _locationError = true);
+        return;
+      }
+
+      print('Getting current position...');
+      // Get current position with a longer timeout
+      Position pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
+      ).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          print('Location request timed out');
+          throw TimeoutException('Location request timed out');
+        },
+      );
+      
+      print('Got position: ${pos.latitude}, ${pos.longitude}');
       setState(() {
         _userLocation = LatLng(pos.latitude, pos.longitude);
         _route = [_userLocation!];
+        _locationError = false;
       });
     } catch (e) {
+      print('Error getting location: $e');
       setState(() => _locationError = true);
     }
   }
@@ -220,12 +263,22 @@ class _RunningScreenState extends State<RunningScreen> {
                               Marker(
                                 point: _route.isNotEmpty ? _route.first : LatLng(0, 0),
                                 width: 200,
-                                height: 40,
-                                child: const Center(
-                                  child: Text(
-                                    'Location unavailable',
-                                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                                  ),
+                                height: 80,
+                                child: Column(
+                                  children: [
+                                    const Text(
+                                      'Location unavailable',
+                                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() => _locationError = false);
+                                        _getUserLocation();
+                                      },
+                                      child: const Text('Retry'),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],

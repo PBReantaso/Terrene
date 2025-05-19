@@ -26,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: const Color(0xFF204B3A),
       body: Center(
         child: Image.asset(
-          'lib/assets/Orange -Terrene logo 4.png',
+          'assets/Orange -Terrene logo 4.png',
           width: 180,
         ),
       ),
